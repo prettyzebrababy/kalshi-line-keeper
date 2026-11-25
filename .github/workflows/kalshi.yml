@@ -1,0 +1,43 @@
+name: Kalshi Line Keeper
+
+on:
+  schedule:
+    - cron: '3/5 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: kalshi-line-keeper
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    env:
+      KALSHI_API_KEY_ID: ${{ secrets.KALSHI_API_KEY_ID }}
+      KALSHI_PRIVATE_KEY_PEM: ${{ secrets.KALSHI_PRIVATE_KEY_PEM }}
+      KALSHI_LIVE: ${{ vars.KALSHI_LIVE || 'false' }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Check market and manage one order
+        run: python kalshi_free_runner.py
+      - name: Save non-secret safety state
+        if: always()
+        run: |
+          if ! git diff --quiet -- state.json; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add state.json
+            git commit -m "Update Kalshi runner safety state"
+            git push
+          fi
