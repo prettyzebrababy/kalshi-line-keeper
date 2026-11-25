@@ -1,0 +1,9 @@
+{
+  "start_bid_cents": null,
+  "moves_today": 0,
+  "utc_day": null,
+  "error_count": 0,
+  "halted": false,
+  "halt_reason": null,
+  "heartbeat_day": null
+}
